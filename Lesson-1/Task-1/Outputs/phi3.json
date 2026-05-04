@@ -1,0 +1,75 @@
+{
+  "api_and_component_examples": [
+    {
+      "question_id": "Question 1",
+      "topic": "REST API Endpoint for User Creation",
+      "examples": [
+        {
+          "scenario": "Successful POST request",
+          "json_payload": {
+            "user_id": "a4b2c3d4-e5f6-78gh-90ij-klmnoqrstuvwxyz"
+          },
+          "description": "The above response would be generated from a successful POST request to the /api/users endpoint with valid user data."
+        },
+        {
+          "scenario": "HTTP 422 (Unprocessable Entity) - Invalid Email Format",
+          "json_payload": {
+            "detail": "Invalid email format"
+          },
+          "description": "This JSON response would come from a request where the provided email does not conform to an expected valid pattern. HTTP status code 422 is used here because it's unprocessable entity due to incorrect input, which can represent various states of error that are understood by consumers but do not apply semantically (e.g., incomplete data or inconsistency)."
+        },
+        {
+          "scenario": "HTTP 400 Bad Request - Invalid Name Length",
+          "json_payload": {
+            "detail": "Name must be between 2 and 50 characters"
+          },
+          "description": "This response indicates that the request failed due to an error in name length, which is a required field. HTTP status code 400 signifies bad requests as defined by REST conventions with FastAPI for this kind of validation issue (incomplete or incorrectly formatted data)."
+        },
+        {
+          "scenario": "REST API Endpoint - No user_id response when no valid request",
+          "json_payload": {
+            "detail": "Bad Request"
+          },
+          "description": "Since the /api/users endpoint does not generate a user_id without POST requests and valid input, there would be an error if such information is expected to return. This situation might only occur in non-standard use cases or misconfigured endpoints where developers could potentially misunderstand behavior."
+        }
+      ]
+    },
+    {
+      "question_id": "Question 2",
+      "topic": "React Component with State Management",
+      "examples": [
+        {
+          "scenario": "Todo List in JSON format after state changes",
+          "json_payload": {
+            "todos": [
+              {
+                "id": 1,
+                "text": "Check the email",
+                "isComplete": false
+              },
+              {
+                "id": 2,
+                "text": "Buy milk",
+                "isComplete": true
+              }
+            ]
+          },
+          "description": "Upon adding an item to the todo list, if using JavaScript object notation for simplicity here's what a logged response might look like showing updated todo_items array within states of our functional React component via hooks. This JSON structure represents an updated list of todos with their respective completed statuses, typically after toggling checkbox states or deleting items. Note that this is not direct output from React code but rather what you'd expect to see in useState state array upon changes made within the component by user interactions like marking completion and deletion actions using hooks (e.g., useEffect)."
+        }
+      ]
+    },
+    {
+      "question_id": "Question 3",
+      "topic": "Authentication Function",
+      "examples": [
+        {
+          "scenario": "JWT Token Validation Error - Expired Token",
+          "json_payload": {
+            "detail": "Token has expired"
+          },
+          "description": "This response would be returned if the provided JWT token is no longer valid due to being past its intended lifespan, which could happen when tokens are set too long or unexpected delays occur between issuance and validation attempt times. The detailed error handling based on PyJWT library conventions should logically provide specific feedback about signature issues (Invalid Signature) as well in such scenarios but for brevity of examples only a general expired token message is provided here."
+        }
+      ]
+    }
+  ]
+}

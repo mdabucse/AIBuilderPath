@@ -1,0 +1,42 @@
+===========================================
+CODE GENERATION (AppDev) TEST QUESTIONS
+===========================================
+
+QUESTION 1: REST API with Validation
+-------------------------------------
+Create a Python FastAPI endpoint that:
+- Accepts a POST request to /api/users
+- Takes user data: name (required, 2-50 chars), email (required, valid format), age (optional, 18-120)
+- Validates all inputs
+- Returns JSON response with generated user_id
+- Includes proper HTTP status codes (200, 400, 422)
+- Has comprehensive error handling
+
+Expected: Production-ready code with input validation, error handling, type hints
+
+
+QUESTION 2: React Component with State Management
+--------------------------------------------------
+Create a React functional component for a Todo List that:
+- Displays a list of todo items
+- Has an input field to add new todos
+- Allows marking todos as complete/incomplete with a checkbox
+- Allows deleting todos with a button
+- Uses React hooks (useState, useEffect)
+- Includes proper TypeScript types (optional but preferred)
+- Has basic styling (inline or CSS)
+
+Expected: Clean component with proper state management and event handling
+
+
+QUESTION 3: Authentication Function
+------------------------------------
+Write a Python function that:
+- Takes a JWT token as input
+- Validates the token (signature, expiration)
+- Extracts user information (user_id, email, roles)
+- Returns a user object or raises appropriate exceptions
+- Handles expired tokens, invalid signatures, and malformed tokens
+- Uses PyJWT library
+
+Expected: Secure authentication with comprehensive error handling

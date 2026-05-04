@@ -1,0 +1,376 @@
+{
+    "appdev": {
+        "test_results": [
+            {
+                "question": 1,
+                "title": "REST API with Validation",
+                "language": "Python",
+                "framework": "FastAPI",
+                "code": "from fastapi import FastAPI, HTTPException, status\nfrom pydantic import BaseModel, EmailStr, Field, field_validator\nfrom typing import Optional\nimport uuid, re\n\napp = FastAPI()\n\nclass UserCreate(BaseModel):\n    name: str = Field(..., min_length=2, max_length=50)\n    email: EmailStr\n    age: Optional[int] = Field(None, ge=18, le=120)\n\n    @field_validator('name')\n    @classmethod\n    def validate_name(cls, v: str) -> str:\n        if not re.match(r'^[a-zA-Z\\s\\-\\']+$', v):\n            raise ValueError('Name must contain only letters, spaces, hyphens, apostrophes')\n        return v.strip()\n\nclass UserResponse(BaseModel):\n    user_id: str\n    name: str\n    email: str\n    age: Optional[int]\n    message: str\n\n@app.post(\n    '/api/users',\n    response_model=UserResponse,\n    status_code=status.HTTP_201_CREATED,\n    responses={\n        400: {'description': 'Bad Request'},\n        422: {'description': 'Validation Error'},\n    }\n)\nasync def create_user(user: UserCreate) -> UserResponse:\n    \"\"\"Create a new user with validated input.\"\"\"\n    try:\n        user_id = str(uuid.uuid4())\n        return UserResponse(\n            user_id=user_id,\n            name=user.name,\n            email=user.email,\n            age=user.age,\n            message='User created successfully'\n        )\n    except Exception as e:\n        raise HTTPException(\n            status_code=status.HTTP_400_BAD_REQUEST,\n            detail=str(e)\n        )",
+                "http_status_codes": {
+                    "success": 201,
+                    "validation_error": 422,
+                    "bad_request": 400
+                },
+                "dependencies": [
+                    "fastapi",
+                    "pydantic[email]",
+                    "uvicorn"
+                ],
+                "features": [
+                    "Name validation with regex (letters, spaces, hyphens, apostrophes only)",
+                    "Email validation via Pydantic EmailStr",
+                    "Optional age field with range constraint (18–120)",
+                    "UUID v4 generated user_id",
+                    "Automatic 422 on schema violations",
+                    "Try/except for unexpected 400 errors"
+                ],
+                "run_command": "uvicorn main:app --reload"
+            },
+            {
+                "question": 2,
+                "title": "React Todo List Component",
+                "language": "TypeScript",
+                "framework": "React",
+                "code": "import { useState, useEffect } from 'react'\n\ninterface Todo {\n  id: number\n  text: string\n  completed: boolean\n}\n\nconst TodoList = () => {\n  const [todos, setTodos] = useState<Todo[]>(() => {\n    const saved = localStorage.getItem('todos')\n    return saved ? JSON.parse(saved) : []\n  })\n  const [input, setInput] = useState('')\n\n  useEffect(() => {\n    localStorage.setItem('todos', JSON.stringify(todos))\n  }, [todos])\n\n  const addTodo = () => {\n    const trimmed = input.trim()\n    if (!trimmed) return\n    setTodos(prev => [...prev, { id: Date.now(), text: trimmed, completed: false }])\n    setInput('')\n  }\n\n  const toggleTodo = (id: number) =>\n    setTodos(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t))\n\n  const deleteTodo = (id: number) =>\n    setTodos(prev => prev.filter(t => t.id !== id))\n\n  const handleKeyDown = (e: React.KeyboardEvent) => {\n    if (e.key === 'Enter') addTodo()\n  }\n\n  return (\n    <div style={{ maxWidth: 480, margin: '2rem auto', fontFamily: 'sans-serif' }}>\n      <h1 style={{ fontSize: 22, marginBottom: '1rem' }}>Todo List</h1>\n      <div style={{ display: 'flex', gap: 8, marginBottom: '1.5rem' }}>\n        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}\n          placeholder='Add a new todo...'\n          style={{ flex: 1, padding: '8px 12px', border: '1px solid #ccc', borderRadius: 6 }} />\n        <button onClick={addTodo} style={{ padding: '8px 16px', borderRadius: 6, cursor: 'pointer' }}>Add</button>\n      </div>\n      {todos.length === 0 && <p style={{ color: '#888', textAlign: 'center' }}>No todos yet!</p>}\n      <ul style={{ listStyle: 'none', padding: 0 }}>\n        {todos.map(todo => (\n          <li key={todo.id} style={{ display: 'flex', alignItems: 'center', gap: 10,\n            padding: '10px 12px', marginBottom: 6, border: '1px solid #eee', borderRadius: 6 }}>\n            <input type='checkbox' checked={todo.completed} onChange={() => toggleTodo(todo.id)} />\n            <span style={{ flex: 1, textDecoration: todo.completed ? 'line-through' : 'none',\n              color: todo.completed ? '#aaa' : 'inherit' }}>{todo.text}</span>\n            <button onClick={() => deleteTodo(todo.id)}\n              style={{ color: '#e24b4a', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16 }}>×</button>\n          </li>\n        ))}\n      </ul>\n    </div>\n  )\n}\n\nexport default TodoList",
+                "hooks_used": [
+                    "useState",
+                    "useEffect"
+                ],
+                "features": [
+                    "TypeScript interface for Todo type",
+                    "Add todo via button click or Enter key",
+                    "Toggle complete/incomplete with checkbox and strikethrough style",
+                    "Delete todo with × button",
+                    "Persists todos to localStorage via useEffect",
+                    "Lazy useState initializer reads from localStorage on mount",
+                    "Input trimming to prevent empty todos"
+                ],
+                "dependencies": [
+                    "react",
+                    "typescript"
+                ]
+            },
+            {
+                "question": 3,
+                "title": "JWT Authentication Function",
+                "language": "Python",
+                "library": "PyJWT",
+                "code": "import jwt\nfrom datetime import datetime, timezone\nfrom dataclasses import dataclass\nfrom typing import List\nimport os\n\n\n@dataclass\nclass AuthenticatedUser:\n    user_id: str\n    email: str\n    roles: List[str]\n\n\nclass TokenExpiredError(Exception):\n    pass\n\nclass InvalidTokenError(Exception):\n    pass\n\nclass MalformedTokenError(Exception):\n    pass\n\n\nSECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'change-me-in-production')\nALGORITHM = 'HS256'\n\n\ndef verify_jwt_token(token: str) -> AuthenticatedUser:\n    \"\"\"\n    Validates a JWT token and returns the authenticated user.\n\n    Args:\n        token: Raw JWT string.\n\n    Returns:\n        AuthenticatedUser with user_id, email, and roles.\n\n    Raises:\n        TokenExpiredError: Token has passed its expiration time.\n        InvalidTokenError: Signature is invalid or issuer mismatch.\n        MalformedTokenError: Token is not a valid JWT structure.\n    \"\"\"\n    if not token or not isinstance(token, str):\n        raise MalformedTokenError('Token must be a non-empty string')\n\n    try:\n        payload = jwt.decode(\n            token,\n            SECRET_KEY,\n            algorithms=[ALGORITHM],\n            options={'require': ['exp', 'sub', 'email']}\n        )\n    except jwt.ExpiredSignatureError:\n        raise TokenExpiredError('Token has expired. Please log in again.')\n    except jwt.InvalidSignatureError:\n        raise InvalidTokenError('Token signature is invalid.')\n    except jwt.DecodeError:\n        raise MalformedTokenError('Token is malformed or not a valid JWT.')\n    except jwt.InvalidTokenError as e:\n        raise InvalidTokenError(f'Token validation failed: {str(e)}')\n\n    user_id = payload.get('sub')\n    email = payload.get('email')\n    roles = payload.get('roles', [])\n\n    if not user_id or not email:\n        raise MalformedTokenError('Token payload is missing required fields: sub, email')\n\n    if not isinstance(roles, list):\n        raise MalformedTokenError('Roles claim must be a list')\n\n    return AuthenticatedUser(user_id=str(user_id), email=str(email), roles=roles)",
+                "exceptions": {
+                    "TokenExpiredError": "Token has passed its expiration time",
+                    "InvalidTokenError": "Signature is invalid or issuer mismatch",
+                    "MalformedTokenError": "Token is not a valid JWT structure or missing required fields"
+                },
+                "required_claims": [
+                    "exp",
+                    "sub",
+                    "email"
+                ],
+                "optional_claims": [
+                    "roles"
+                ],
+                "features": [
+                    "Validates JWT signature using HS256",
+                    "Enforces required claims: exp, sub, email",
+                    "Raises typed custom exceptions for each failure mode",
+                    "Extracts user_id, email, roles into AuthenticatedUser dataclass",
+                    "Validates roles is a list type",
+                    "SECRET_KEY loaded from environment variable",
+                    "Guards against empty/non-string token input"
+                ],
+                "dependencies": [
+                    "PyJWT"
+                ],
+                "install_command": "pip install PyJWT"
+            }
+        ]
+    },
+    "data": {
+        "test_results": [
+            {
+                "question": 1,
+                "title": "Complex SQL Query with Joins",
+                "type": "SQL",
+                "dialect": "Standard SQL / PostgreSQL",
+                "code": "SELECT\n    c.id AS customer_id,\n    c.name AS customer_name,\n    c.email,\n    SUM(o.total_amount)                        AS total_spent,\n    COUNT(DISTINCT o.id)                       AS number_of_orders,\n    ROUND(AVG(o.total_amount), 2)              AS average_order_value\nFROM customers c\nINNER JOIN orders o\n    ON c.id = o.customer_id\nWHERE\n    o.status = 'completed'\n    AND o.order_date >= CURRENT_DATE - INTERVAL '6 months'\nGROUP BY\n    c.id,\n    c.name,\n    c.email\nORDER BY total_spent DESC\nLIMIT 5;",
+                "schema_used": [
+                    "customers",
+                    "orders"
+                ],
+                "clauses": {
+                    "join": "INNER JOIN orders ON customers.id = orders.customer_id",
+                    "filter": "status = 'completed' AND order_date >= CURRENT_DATE - INTERVAL '6 months'",
+                    "aggregations": {
+                        "total_spent": "SUM(o.total_amount)",
+                        "number_of_orders": "COUNT(DISTINCT o.id)",
+                        "average_order_value": "ROUND(AVG(o.total_amount), 2)"
+                    },
+                    "sort": "ORDER BY total_spent DESC",
+                    "limit": "LIMIT 5"
+                },
+                "notes": [
+                    "CURRENT_DATE - INTERVAL '6 months' is PostgreSQL syntax; use DATEADD in SQL Server or DATE_SUB in MySQL",
+                    "COUNT(DISTINCT o.id) prevents double-counting if joins produce duplicate rows",
+                    "order_items table not required since total_amount is stored on the orders table",
+                    "Group by includes all non-aggregated SELECT columns"
+                ]
+            },
+            {
+                "question": 2,
+                "title": "SQL with Window Functions",
+                "type": "SQL",
+                "dialect": "Standard SQL / PostgreSQL",
+                "code": "WITH monthly_revenue AS (\n    SELECT\n        DATE_TRUNC('month', sale_date)          AS month,\n        region,\n        SUM(amount)                             AS total_revenue\n    FROM sales\n    GROUP BY\n        DATE_TRUNC('month', sale_date),\n        region\n)\nSELECT\n    TO_CHAR(month, 'YYYY-MM')                   AS month,\n    region,\n    ROUND(total_revenue, 2)                     AS total_revenue,\n    ROUND(\n        LAG(total_revenue) OVER (\n            PARTITION BY region\n            ORDER BY month\n        ), 2\n    )                                           AS previous_month_revenue,\n    ROUND(\n        CASE\n            WHEN LAG(total_revenue) OVER (\n                PARTITION BY region ORDER BY month\n            ) IS NULL THEN NULL\n            ELSE (\n                (total_revenue - LAG(total_revenue) OVER (\n                    PARTITION BY region ORDER BY month\n                )) / NULLIF(\n                    LAG(total_revenue) OVER (\n                        PARTITION BY region ORDER BY month\n                    ), 0\n                ) * 100\n            )\n        END, 2\n    )                                           AS pct_change_from_prev_month\nFROM monthly_revenue\nORDER BY\n    region ASC,\n    month ASC;",
+                "schema_used": [
+                    "sales"
+                ],
+                "window_functions": {
+                    "LAG": "Retrieves total_revenue from the previous month within the same region partition",
+                    "PARTITION BY": "Resets the LAG window per region so month-over-month is region-scoped",
+                    "ORDER BY inside OVER": "month ASC — ensures LAG looks at the chronologically prior row"
+                },
+                "cte": {
+                    "name": "monthly_revenue",
+                    "purpose": "Pre-aggregates revenue by month and region to simplify window function application"
+                },
+                "notes": [
+                    "DATE_TRUNC is PostgreSQL syntax; use DATE_FORMAT in MySQL or DATEFROMPARTS in SQL Server",
+                    "NULLIF(..., 0) prevents division-by-zero when previous month revenue is 0",
+                    "First month per region will have NULL for pct_change (no prior row for LAG)",
+                    "LAG is called three times; can be refactored into a second CTE to avoid repetition"
+                ]
+            },
+            {
+                "question": 3,
+                "title": "Data Cleaning with Pandas",
+                "type": "Python",
+                "library": "pandas",
+                "code": "import pandas as pd\nimport numpy as np\n\n# ── 1. Load ──────────────────────────────────────────────────────────────\ndf = pd.read_csv('sales_data.csv')\nprint(f'Loaded {len(df)} rows, {df.shape[1]} columns')\nprint('Missing values before cleaning:\\n', df.isnull().sum())\n\n# ── 2. Handle missing values ─────────────────────────────────────────────\n# Drop rows where critical identity columns are null\ndf.dropna(subset=['date', 'product'], inplace=True)\n\n# Fill numeric columns with column median (robust to outliers)\ndf['quantity'] = df['quantity'].fillna(df['quantity'].median())\ndf['price']    = df['price'].fillna(df['price'].median())\n\n# Fill categorical column with mode\ndf['region'] = df['region'].fillna(df['region'].mode()[0])\n\nprint('Missing values after cleaning:\\n', df.isnull().sum())\n\n# ── 3. Remove duplicates ─────────────────────────────────────────────────\nbefore = len(df)\ndf.drop_duplicates(inplace=True)\nprint(f'Removed {before - len(df)} duplicate rows')\n\n# ── 4. Parse date column ─────────────────────────────────────────────────\ndf['date'] = pd.to_datetime(df['date'], infer_datetime_format=True, errors='coerce')\n\n# Drop rows where date could not be parsed\ninvalid_dates = df['date'].isnull().sum()\nif invalid_dates > 0:\n    print(f'Dropping {invalid_dates} rows with unparseable dates')\n    df.dropna(subset=['date'], inplace=True)\n\n# ── 5. Derived column ────────────────────────────────────────────────────\ndf['quantity']    = pd.to_numeric(df['quantity'], errors='coerce')\ndf['price']       = pd.to_numeric(df['price'],    errors='coerce')\ndf['total_sales'] = df['quantity'] * df['price']\n\n# ── 6. Summary statistics grouped by region ──────────────────────────────\nsummary = (\n    df.groupby('region')['total_sales']\n    .agg(\n        mean_total_sales   = 'mean',\n        median_total_sales = 'median',\n        std_total_sales    = 'std',\n        total_revenue      = 'sum',\n        order_count        = 'count'\n    )\n    .round(2)\n    .reset_index()\n)\nprint('\\nSummary statistics by region:')\nprint(summary.to_string(index=False))\n\n# ── 7. Export ─────────────────────────────────────────────────────────────\ndf.to_csv('cleaned_sales.csv', index=False)\nprint(f'\\nExported {len(df)} cleaned rows to cleaned_sales.csv')",
+                "pipeline_steps": [
+                    {
+                        "step": 1,
+                        "action": "Load CSV",
+                        "detail": "pd.read_csv with shape and null audit printed for visibility"
+                    },
+                    {
+                        "step": 2,
+                        "action": "Handle missing values",
+                        "detail": "Drop rows missing date or product; fill quantity/price with median; fill region with mode"
+                    },
+                    {
+                        "step": 3,
+                        "action": "Remove duplicates",
+                        "detail": "drop_duplicates on all columns; reports count removed"
+                    },
+                    {
+                        "step": 4,
+                        "action": "Parse date column",
+                        "detail": "pd.to_datetime with infer_datetime_format; coerces bad values to NaT and drops them"
+                    },
+                    {
+                        "step": 5,
+                        "action": "Create total_sales column",
+                        "detail": "quantity * price after coercing both to numeric to guard against string values"
+                    },
+                    {
+                        "step": 6,
+                        "action": "Summary statistics by region",
+                        "detail": "groupby region on total_sales — mean, median, std, sum, count"
+                    },
+                    {
+                        "step": 7,
+                        "action": "Export cleaned CSV",
+                        "detail": "to_csv with index=False to omit pandas row index from output file"
+                    }
+                ],
+                "missing_value_strategy": {
+                    "date": "drop — cannot impute a meaningful date",
+                    "product": "drop — identity column, no safe default",
+                    "quantity": "fill with column median — robust to outliers",
+                    "price": "fill with column median — robust to outliers",
+                    "region": "fill with mode — most common category"
+                },
+                "dependencies": [
+                    "pandas",
+                    "numpy"
+                ],
+                "install_command": "pip install pandas numpy"
+            }
+        ]
+    },
+    "devops": {
+        "test_results": [
+            {
+                "question": 1,
+                "title": "Docker Multi-Stage Build",
+                "type": "Dockerfile",
+                "stages": [
+                    "builder",
+                    "production"
+                ],
+                "code": "# ── Stage 1: builder ────────────────────────────────────────────────────\nFROM python:3.11-slim AS builder\n\nWORKDIR /build\n\n# Install build dependencies\nRUN apt-get update && apt-get install -y --no-install-recommends \\\n        gcc \\\n        libpq-dev \\\n    && rm -rf /var/lib/apt/lists/*\n\n# Copy only requirements first for layer cache optimization\nCOPY requirements.txt .\n\n# Install into a prefix so we can copy cleanly to production stage\nRUN pip install --upgrade pip \\\n    && pip install --prefix=/install --no-cache-dir -r requirements.txt\n\n\n# ── Stage 2: production ──────────────────────────────────────────────────\nFROM python:3.11-slim AS production\n\n# Security: non-root user\nRUN groupadd --gid 1001 appgroup \\\n    && useradd --uid 1001 --gid appgroup --no-create-home appuser\n\nWORKDIR /app\n\n# Copy installed packages from builder\nCOPY --from=builder /install /usr/local\n\n# Copy application source\nCOPY --chown=appuser:appgroup . .\n\n# Environment variables\nENV PYTHONDONTWRITEBYTECODE=1 \\\n    PYTHONUNBUFFERED=1 \\\n    FLASK_ENV=production \\\n    FLASK_APP=app.py \\\n    PORT=5000\n\n# Drop to non-root\nUSER appuser\n\nEXPOSE 5000\n\n# Health check — hits /health endpoint every 30s\nHEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \\\n    CMD python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5000/health')\" || exit 1\n\n# Run with gunicorn for production\nCMD [\"gunicorn\", \"--bind\", \"0.0.0.0:5000\", \"--workers\", \"4\", \"--timeout\", \"120\", \"app:app\"]",
+                "security_practices": [
+                    "Non-root user (uid 1001) created and enforced with USER directive",
+                    "PYTHONDONTWRITEBYTECODE prevents .pyc files from being written",
+                    "PYTHONUNBUFFERED ensures logs are streamed immediately",
+                    "Builder stage discarded — gcc and build tools never reach production image",
+                    "--no-install-recommends and apt cache purge minimize image surface area",
+                    "--no-cache-dir on pip prevents pip cache from bloating the image"
+                ],
+                "layer_cache_optimizations": [
+                    "requirements.txt copied before application code so dependency layer is only invalidated when requirements change",
+                    "apt-get install and pip install each in dedicated RUN layers",
+                    "Source code COPY is the last step — most frequently changing layer is last"
+                ],
+                "health_check": {
+                    "endpoint": "/health",
+                    "interval": "30s",
+                    "timeout": "10s",
+                    "start_period": "15s",
+                    "retries": 3
+                },
+                "environment_variables": {
+                    "PYTHONDONTWRITEBYTECODE": "1",
+                    "PYTHONUNBUFFERED": "1",
+                    "FLASK_ENV": "production",
+                    "FLASK_APP": "app.py",
+                    "PORT": "5000"
+                },
+                "notes": [
+                    "gunicorn must be included in requirements.txt",
+                    "Add /health route to Flask app returning 200 OK for the HEALTHCHECK to pass",
+                    "For Alpine-based images replace groupadd/useradd with addgroup/adduser"
+                ]
+            },
+            {
+                "question": 2,
+                "title": "Kubernetes Deployment",
+                "type": "Kubernetes YAML",
+                "code": "# ── ConfigMap ────────────────────────────────────────────────────────────\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: webapp-config\n  namespace: default\n  labels:\n    app: webapp\ndata:\n  FLASK_ENV: production\n  LOG_LEVEL: info\n  PORT: \"5000\"\n\n---\n# ── Service ───────────────────────────────────────────────────────────────\napiVersion: v1\nkind: Service\nmetadata:\n  name: webapp-service\n  namespace: default\n  labels:\n    app: webapp\nspec:\n  type: LoadBalancer\n  selector:\n    app: webapp\n  ports:\n    - name: http\n      protocol: TCP\n      port: 80\n      targetPort: 5000\n\n---\n# ── Deployment ────────────────────────────────────────────────────────────\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: webapp-deployment\n  namespace: default\n  labels:\n    app: webapp\nspec:\n  replicas: 3\n\n  selector:\n    matchLabels:\n      app: webapp\n\n  # Rolling update strategy\n  strategy:\n    type: RollingUpdate\n    rollingUpdate:\n      maxSurge: 1\n      maxUnavailable: 0\n\n  template:\n    metadata:\n      labels:\n        app: webapp\n    spec:\n\n      # Pod anti-affinity: spread pods across different nodes\n      affinity:\n        podAntiAffinity:\n          preferredDuringSchedulingIgnoredDuringExecution:\n            - weight: 100\n              podAffinityTerm:\n                labelSelector:\n                  matchExpressions:\n                    - key: app\n                      operator: In\n                      values:\n                        - webapp\n                topologyKey: kubernetes.io/hostname\n\n      # Security context at pod level\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1001\n        fsGroup: 1001\n\n      containers:\n        - name: webapp\n          image: your-dockerhub-username/webapp:latest\n          imagePullPolicy: Always\n          ports:\n            - containerPort: 5000\n              name: http\n\n          # Inject ConfigMap as environment variables\n          envFrom:\n            - configMapRef:\n                name: webapp-config\n\n          # Resource limits and requests\n          resources:\n            requests:\n              cpu: 250m\n              memory: 256Mi\n            limits:\n              cpu: 500m\n              memory: 512Mi\n\n          # Liveness probe: restart container if app is stuck\n          livenessProbe:\n            httpGet:\n              path: /health\n              port: 5000\n            initialDelaySeconds: 30\n            periodSeconds: 15\n            timeoutSeconds: 5\n            failureThreshold: 3\n\n          # Readiness probe: only route traffic when app is ready\n          readinessProbe:\n            httpGet:\n              path: /health\n              port: 5000\n            initialDelaySeconds: 10\n            periodSeconds: 10\n            timeoutSeconds: 3\n            failureThreshold: 3\n\n          # Container-level security\n          securityContext:\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities:\n              drop:\n                - ALL",
+                "resources": {
+                    "requests": {
+                        "cpu": "250m",
+                        "memory": "256Mi"
+                    },
+                    "limits": {
+                        "cpu": "500m",
+                        "memory": "512Mi"
+                    }
+                },
+                "rolling_update": {
+                    "maxSurge": 1,
+                    "maxUnavailable": 0,
+                    "effect": "Zero-downtime deploys: new pod created before old one is removed"
+                },
+                "probes": {
+                    "liveness": {
+                        "path": "/health",
+                        "initialDelaySeconds": 30,
+                        "purpose": "Restart container if app becomes unresponsive"
+                    },
+                    "readiness": {
+                        "path": "/health",
+                        "initialDelaySeconds": 10,
+                        "purpose": "Hold traffic until app is fully initialised"
+                    }
+                },
+                "anti_affinity": {
+                    "type": "podAntiAffinity",
+                    "mode": "preferredDuringSchedulingIgnoredDuringExecution",
+                    "topologyKey": "kubernetes.io/hostname",
+                    "effect": "Scheduler prefers placing pods on separate nodes for HA"
+                },
+                "security_practices": [
+                    "runAsNonRoot: true enforced at pod and container level",
+                    "readOnlyRootFilesystem: true prevents runtime file tampering",
+                    "allowPrivilegeEscalation: false blocks sudo/setuid escalation",
+                    "All Linux capabilities dropped with capabilities.drop: [ALL]"
+                ],
+                "notes": [
+                    "Replace your-dockerhub-username/webapp:latest with your actual image",
+                    "Use requiredDuringSchedulingIgnoredDuringExecution for strict anti-affinity",
+                    "Add a HorizontalPodAutoscaler (HPA) manifest for auto-scaling on CPU/memory",
+                    "Use ClusterIP instead of LoadBalancer if running behind an Ingress controller"
+                ]
+            },
+            {
+                "question": 3,
+                "title": "GitHub Actions CI/CD Pipeline",
+                "type": "GitHub Actions YAML",
+                "file_path": ".github/workflows/ci-cd.yml",
+                "code": "name: CI/CD Pipeline\n\non:\n  push:\n    branches: [main]\n  pull_request:\n    branches: [main]\n\nenv:\n  PYTHON_VERSION: '3.11'\n  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/webapp\n\njobs:\n\n  # ── Job 1: lint + test ────────────────────────────────────────────────\n  test:\n    name: Lint & Test\n    runs-on: ubuntu-latest\n\n    steps:\n      - name: Checkout code\n        uses: actions/checkout@v4\n\n      - name: Set up Python ${{ env.PYTHON_VERSION }}\n        uses: actions/setup-python@v5\n        with:\n          python-version: ${{ env.PYTHON_VERSION }}\n\n      - name: Cache pip dependencies\n        uses: actions/cache@v4\n        with:\n          path: ~/.cache/pip\n          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}\n          restore-keys: |\n            ${{ runner.os }}-pip-\n\n      - name: Install dependencies\n        run: |\n          python -m pip install --upgrade pip\n          pip install -r requirements.txt\n          pip install flake8 pytest pytest-cov\n\n      - name: Lint with flake8\n        run: |\n          # Stop build on syntax errors or undefined names\n          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics\n          # Warn on style issues but do not fail\n          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics\n\n      - name: Run unit tests with pytest\n        run: |\n          pytest tests/ \\\n            --cov=. \\\n            --cov-report=xml \\\n            --cov-report=term-missing \\\n            -v\n\n      - name: Upload coverage report\n        uses: actions/upload-artifact@v4\n        with:\n          name: coverage-report\n          path: coverage.xml\n\n  # ── Job 2: build + push Docker image ─────────────────────────────────\n  build:\n    name: Build & Push Docker Image\n    runs-on: ubuntu-latest\n    needs: test\n    if: github.ref == 'refs/heads/main' && github.event_name == 'push'\n\n    outputs:\n      image_tag: ${{ steps.meta.outputs.tags }}\n\n    steps:\n      - name: Checkout code\n        uses: actions/checkout@v4\n\n      - name: Set up Docker Buildx\n        uses: docker/setup-buildx-action@v3\n\n      - name: Log in to Docker Hub\n        uses: docker/login-action@v3\n        with:\n          username: ${{ secrets.DOCKERHUB_USERNAME }}\n          password: ${{ secrets.DOCKERHUB_TOKEN }}\n\n      - name: Extract image metadata\n        id: meta\n        uses: docker/metadata-action@v5\n        with:\n          images: ${{ env.IMAGE_NAME }}\n          tags: |\n            type=sha,prefix=sha-\n            type=raw,value=latest\n\n      - name: Build and push Docker image\n        uses: docker/build-push-action@v5\n        with:\n          context: .\n          push: true\n          tags: ${{ steps.meta.outputs.tags }}\n          cache-from: type=gha\n          cache-to: type=gha,mode=max\n\n  # ── Job 3: deploy to production ───────────────────────────────────────\n  deploy:\n    name: Deploy to Production\n    runs-on: ubuntu-latest\n    needs: build\n    if: github.ref == 'refs/heads/main' && github.event_name == 'push'\n    environment: production\n\n    steps:\n      - name: Checkout code\n        uses: actions/checkout@v4\n\n      - name: Deploy via SSH\n        uses: appleboy/ssh-action@v1.0.3\n        with:\n          host: ${{ secrets.PROD_HOST }}\n          username: ${{ secrets.PROD_USER }}\n          key: ${{ secrets.PROD_SSH_KEY }}\n          script: |\n            docker pull ${{ env.IMAGE_NAME }}:latest\n            docker stop webapp || true\n            docker rm webapp   || true\n            docker run -d \\\n              --name webapp \\\n              --restart unless-stopped \\\n              -p 5000:5000 \\\n              --env-file /etc/webapp/.env \\\n              ${{ env.IMAGE_NAME }}:latest\n            docker image prune -f",
+                "triggers": {
+                    "push": [
+                        "main"
+                    ],
+                    "pull_request": [
+                        "main"
+                    ]
+                },
+                "jobs": [
+                    {
+                        "id": "test",
+                        "name": "Lint & Test",
+                        "runs_on": "ubuntu-latest",
+                        "condition": "all pushes and PRs",
+                        "steps": [
+                            "Checkout code (actions/checkout@v4)",
+                            "Set up Python 3.11 (actions/setup-python@v5)",
+                            "Cache pip with hash of requirements*.txt",
+                            "Install runtime + dev dependencies",
+                            "flake8 lint — hard fail on syntax/undefined, soft warn on style",
+                            "pytest with coverage XML output",
+                            "Upload coverage.xml as build artifact"
+                        ]
+                    },
+                    {
+                        "id": "build",
+                        "name": "Build & Push Docker Image",
+                        "runs_on": "ubuntu-latest",
+                        "condition": "push to main only (needs: test)",
+                        "steps": [
+                            "Checkout code",
+                            "Set up Docker Buildx for multi-platform support",
+                            "Login to Docker Hub using secrets",
+                            "Extract metadata tags (sha + latest)",
+                            "Build and push with GitHub Actions layer cache (type=gha)"
+                        ]
+                    },
+                    {
+                        "id": "deploy",
+                        "name": "Deploy to Production",
+                        "runs_on": "ubuntu-latest",
+                        "condition": "push to main only (needs: build)",
+                        "environment": "production",
+                        "steps": [
+                            "Checkout code",
+                            "SSH into production server via appleboy/ssh-action",
+                            "Pull latest image, stop and remove old container",
+                            "Run new container with --restart unless-stopped",
+                            "Prune dangling images"
+                        ]
+                    }
+                ],
+                "required_secrets": {
+                    "DOCKERHUB_USERNAME": "Docker Hub account username",
+                    "DOCKERHUB_TOKEN": "Docker Hub access token (not password)",
+                    "PROD_HOST": "Production server IP or hostname",
+                    "PROD_USER": "SSH login username on production server",
+                    "PROD_SSH_KEY": "Private SSH key for production server access"
+                },
+                "caching": {
+                    "pip": "actions/cache@v4 keyed on hash of requirements*.txt files",
+                    "docker_layers": "docker/build-push-action cache-from/cache-to type=gha"
+                },
+                "notes": [
+                    "Docker Hub token is preferred over password — generate at hub.docker.com > Account Settings > Security",
+                    "Set environment: production on the deploy job to require manual approval via GitHub Environments",
+                    "Replace appleboy/ssh-action deploy step with kubectl rollout for Kubernetes targets",
+                    "Add a Slack or Teams notification step after deploy using appropriate action",
+                    "Use concurrency: group to cancel in-progress runs on new pushes to the same branch"
+                ]
+            }
+        ]
+    }
+}

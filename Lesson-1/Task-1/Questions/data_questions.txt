@@ -1,0 +1,47 @@
+===========================================
+DATA ANALYSIS & SQL GENERATION QUESTIONS
+===========================================
+
+QUESTION 1: Complex SQL Query with Joins
+-----------------------------------------
+Database Schema:
+- customers(id, name, email, created_at)
+- orders(id, customer_id, order_date, total_amount, status)
+- order_items(id, order_id, product_id, quantity, price)
+
+Write a SQL query to find:
+- Top 5 customers by total purchase amount in the last 6 months
+- Include: customer name, email, total spent, number of orders, average order value
+- Only include completed orders (status = 'completed')
+- Sort by total spent descending
+
+Expected: Correct SQL with proper joins, aggregations, and date filtering
+
+
+QUESTION 2: SQL with Window Functions
+--------------------------------------
+Database Schema:
+- sales(id, product_id, sale_date, amount, region)
+
+Write a SQL query to:
+- Calculate monthly revenue for each region
+- Show: month, region, total_revenue
+- Include percentage change from previous month for each region
+- Use window functions (LAG, PARTITION BY)
+- Sort by region and month
+
+Expected: Advanced SQL with window functions and calculations
+
+
+QUESTION 3: Data Cleaning with Pandas
+--------------------------------------
+Write Python code using pandas that:
+- Loads a CSV file 'sales_data.csv' with columns: date, product, quantity, price, region
+- Handles missing values (fill or drop based on column)
+- Removes duplicate rows
+- Converts 'date' column to datetime format
+- Creates a new column 'total_sales' (quantity * price)
+- Calculates summary statistics (mean, median, std) grouped by region
+- Exports cleaned data to 'cleaned_sales.csv'
+
+Expected: Complete data cleaning pipeline with proper handling
