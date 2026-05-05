@@ -1,0 +1,67 @@
+# -------------------------------
+# Python cache
+# -------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# -------------------------------
+# Virtual environments (uv)
+# -------------------------------
+.venv/
+venv/
+env/
+
+# -------------------------------
+# Environment variables
+# -------------------------------
+.env
+.env.*
+
+# -------------------------------
+# uv / dependency artifacts
+# -------------------------------
+# uv creates lockfile (KEEP THIS)
+# uv.lock  ← DO NOT IGNORE
+
+# Optional: if using pip fallback
+pip-wheel-metadata/
+
+# -------------------------------
+# Test / coverage
+# -------------------------------
+.coverage
+coverage.xml
+htmlcov/
+
+# -------------------------------
+# Logs
+# -------------------------------
+*.log
+
+# -------------------------------
+# IDE / Editor
+# -------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# -------------------------------
+# macOS / OS files
+# -------------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------------
+# Jupyter
+# -------------------------------
+.ipynb_checkpoints/
+
+# -------------------------------
+# Build artifacts
+# -------------------------------
+build/
+dist/
+*.egg-info/
+*.egg
