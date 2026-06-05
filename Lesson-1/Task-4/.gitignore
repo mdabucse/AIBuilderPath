@@ -1,0 +1,6 @@
+# Generated vector index (rebuilt from data/ on demand)
+index/
+
+# Re-include the example env template
+# (the repo-root .gitignore ignores .env.* — this template is safe to commit)
+!.env.example
