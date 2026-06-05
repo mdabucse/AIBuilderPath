@@ -1,0 +1,8 @@
+[project]
+name = "task-1"
+version = "0.1.0"
+description = "Prompt Optimization Lab — basic vs refined vs Chain-of-Thought prompts for a SaaS billing support assistant, evaluated on Ollama/phi3."
+requires-python = ">=3.13"
+dependencies = [
+    "requests>=2.34.2",
+]
