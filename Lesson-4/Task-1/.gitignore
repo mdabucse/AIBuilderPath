@@ -1,0 +1,5 @@
+# Generated FAISS vector index (rebuilt via ingest.py)
+index/
+
+# Re-include the example env template
+!.env.example
