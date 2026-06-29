@@ -1,0 +1,8 @@
+VPN Setup Guide:
+To setup a VPN, use the internal portal at vpn.company.internal and download the client.
+
+Approved Software:
+VS Code, PyCharm, Slack, Zoom, Microsoft Office.
+
+Laptop Request:
+Submit a ticket to IT support via JIRA with your manager's approval attached.

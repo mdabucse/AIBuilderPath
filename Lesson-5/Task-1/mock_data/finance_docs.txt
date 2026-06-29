@@ -1,0 +1,8 @@
+Reimbursement Process:
+To file a reimbursement, use the Expensify portal. Submit all receipts within 30 days of the expense.
+
+Budget Reports:
+Last month's budget report can be found in the shared Google Drive under Finance -> Reports.
+
+Payroll:
+Payroll is processed on the 15th and the last day of every month. If those fall on a weekend, it is processed on the preceding Friday.
